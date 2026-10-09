@@ -250,50 +250,6 @@ For panel data, temporal separation should also be checked at the firm-year leve
 | Data Format | CSV |
 
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.x
-- Google Colab or Jupyter Notebook
-- Access to the KoTaP dataset
-
-### 1. Clone the Repository
-
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd corporate-tax-avoidance-ml
-```
-
-### 2. Install Dependencies
-
-```bash
-pip install pandas numpy matplotlib seaborn scipy scikit-learn statsmodels shap
-```
-
-Additional packages may be required depending on the models and evaluation procedures implemented in the complete notebook.
-
-### 3. Load the Dataset
-
-The original workflow uses Google Colab's file-upload interface.
-
-```python
-import pandas as pd
-from google.colab import files
-
-uploaded = files.upload()
-
-df = pd.read_csv(
-    next(iter(uploaded)),
-    encoding="euc-kr"
-)
-
-print("Dataset shape:", df.shape)
-display(df.head())
-```
-
-If the dataset is already stored locally, replace the upload procedure with the appropriate file path.
-
 ### 4. Execute the Analysis
 
 Run the notebook sequentially, beginning with data acquisition and understanding, followed by exploratory analysis, preprocessing, modeling, evaluation, clustering, and explainability.
