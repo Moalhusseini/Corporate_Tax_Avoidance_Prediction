@@ -250,95 +250,67 @@ For panel data, temporal separation should also be checked at the firm-year leve
 | Data Format | CSV |
 
 
-### 4. Execute the Analysis
 
-Run the notebook sequentially, beginning with data acquisition and understanding, followed by exploratory analysis, preprocessing, modeling, evaluation, clustering, and explainability.
+# Research Findings and Interpretation
 
-## Research Findings and Interpretation
+## 1. Descriptive and Exploratory Findings
 
-### 1. Descriptive and Exploratory Findings
+The Korean Tax Avoidance Panel (KoTaP) dataset contains 12,653 firm-year observations, 65 variables, and 1,754 Korean listed non-financial firms covering 2011–2024. No missing values or duplicate observations were identified.
 
-The empirical analysis was conducted using the Korean Tax Avoidance Panel (KoTaP) dataset, which contains **12,653 firm-year observations, 65 variables, and 1,754 unique Korean listed non-financial firms** covering the period from 2011 to 2024. The initial data quality assessment identified no missing values or duplicate observations.
+The analysis revealed differences in corporate tax behavior across firms. CETR was negatively associated with ROA, ROE, and growth, while positive associations appeared with firm size, leverage, and historical tax indicators. Average CETR increased from 0.1921 for the smallest firms to 0.2755 for the largest firms.
 
-The exploratory analysis revealed substantial variation in corporate tax avoidance indicators across firms and years. The accounting-based effective tax rate (GETR) and cash effective tax rate (CETR) did not follow identical yearly patterns, indicating that the choice of tax avoidance measure can influence the interpretation of corporate tax behaviour.
+## 2. Regression Results
 
-Several financial variables exhibited skewed distributions and extreme observations. These observations were retained in the initial descriptive analysis because they may reflect genuine differences in firm size, financial structure, and operating performance. The correlation analysis identified negative associations between CETR and variables such as return on assets (ROA), return on equity (ROE), and growth (GRW). Positive associations were observed between CETR and several historical tax-related variables, firm size, and leverage.
+The regression analysis used 10,899 observations to predict the following year's cash effective tax rate (CETR).
 
-The quartile analysis further showed differences in tax indicators across firm characteristics. In particular, average CETR increased from **0.1921 in the smallest firm-size quartile to 0.2755 in the largest quartile**. Firms in higher leverage quartiles also generally exhibited higher tax-rate measures than firms in the lowest leverage group. These findings demonstrate heterogeneity in corporate tax behaviour and support the use of multiple financial and tax-related indicators in the predictive analysis.
+| Model | MAE | RMSE | R² |
+|---|---:|---:|---:|
+| Multiple Linear Regression | 0.1753 | 0.2320 | -0.0983 |
+| LightGBM (17 features) | 0.1724 | 0.2229 | -0.0145 |
+| LightGBM (full features) | 0.1651 | 0.2178 | 0.0315 |
+| Optimized LightGBM | 0.1494 | 0.2094 | 0.1051 |
+| Residual MLP | 0.1606 | 0.2291 | -0.0718 |
 
-### 2. Regression Findings
+Optimized LightGBM achieved the best regression performance, reducing MAE by approximately 14.8% compared with the linear baseline. However, its R² of 0.1051 indicates that much of the variation in future CETR remains unexplained.
 
-The regression experiments evaluated the ability of machine learning models to predict the subsequent year's cash effective tax rate (\(CETR_{t+1}\)) using information available in the current period. After excluding firm-year observations without an available subsequent-year target, the predictive dataset contained **10,899 observations**.
+## 3. Classification Results
 
-Multiple Linear Regression established the baseline performance, achieving an MAE of 0.1753, an RMSE of 0.2320, and an \(R^2\) of −0.0983. The negative \(R^2\) indicates that the baseline model performed poorly in explaining variation in future CETR under the temporal evaluation setting.
+The classification models predicted three corporate tax-risk categories: Low, Medium, and High.
 
-LightGBM produced progressively better results as relevant explanatory variables were added. The initial 17-feature configuration achieved an MAE of 0.1724, an RMSE of 0.2229, and an \(R^2\) of −0.0145. Expanding the model to include the full financial feature configuration reduced the MAE to 0.1651 and the RMSE to 0.2178, while increasing \(R^2\) to 0.0315.
+| Model | Accuracy | F1-score | Weighted ROC-AUC |
+|---|---:|---:|---:|
+| Logistic Regression | 55.00% | 0.4800 | 0.6745 |
+| Random Forest (optimized) | 58.99% | 0.5640 | 0.7242 |
+| SVM (baseline) | 58.00% | 0.5000 | 0.7203 |
+| SVM (optimized) | 56.08% | 0.5092 | 0.6666 |
 
-The strongest regression results were obtained after incorporating historical tax-related variables. The optimized LightGBM model achieved a final **MAE of 0.1494, RMSE of 0.2094, and \(R^2\) of 0.1051** on the independent test period. Compared with the Multiple Linear Regression baseline, the optimized LightGBM model reduced MAE by approximately 14.8% and RMSE by approximately 9.7%.
+Optimized Random Forest achieved the strongest overall classification performance. Nevertheless, its accuracy of 58.99% indicates limited predictive reliability, particularly across all three risk categories.
 
-The Residual Multi-Layer Perceptron achieved an MAE of 0.1606, an RMSE of 0.2291, and an \(R^2\) of −0.0718. Although its MAE was lower than that of the linear baseline, it did not outperform the optimized LightGBM model.
+## 4. Clustering Results
 
-Overall, the regression findings show that the optimized LightGBM model provided the best predictive performance among the reported regression configurations. However, its \(R^2\) of 0.1051 indicates that it explained only a limited proportion of the variation in future CETR. The results therefore support the predictive usefulness of historical tax information while also demonstrating that substantial variation remains unexplained.
+Isolation Forest identified 127 potential outliers, leaving 12,526 observations for clustering. K-Means identified a dominant group and smaller, more distinctive groups. A four-cluster Gaussian Mixture Model (GMM) further revealed differences in firm size, foreign ownership, leverage, liquidity, cash holdings, growth, and asset structure.
 
-### 3. Classification Findings
+These clusters represent statistical groupings rather than definitive tax-risk categories.
 
-The classification experiments assigned observations to three corporate tax-risk categories: Low, Medium, and High. Logistic Regression, Random Forest, and Support Vector Machine (SVM) were evaluated using Accuracy, Precision, Recall, F1-score, and weighted multiclass ROC-AUC.
+## 5. SHAP Explainability
 
-Logistic Regression achieved an accuracy of 0.5500, precision of 0.5300, recall of 0.5500, F1-score of 0.4800, and weighted ROC-AUC of 0.6745. This established a baseline for comparison with nonlinear classification models.
+SHAP analysis identified historical tax indicators as the most influential features in the optimized LightGBM model.
 
-The baseline Random Forest improved upon Logistic Regression, achieving an accuracy of 0.5800 and a weighted ROC-AUC of 0.7068. Following hyperparameter optimization, the Random Forest achieved an accuracy of **0.5899**, precision of 0.5722, recall of 0.5899, F1-score of 0.5640, and weighted ROC-AUC of 0.7242.
-
-The improvement was observed across all reported metrics. Accuracy increased by 0.0099, while the F1-score increased by 0.0340 and weighted ROC-AUC increased by 0.0174. These results indicate that hyperparameter optimization improved the overall balance of the Random Forest classifier, although the increase in accuracy remained modest.
-
-The baseline SVM achieved an accuracy of 0.5800 and a weighted ROC-AUC of 0.7203. However, its optimized version performed less effectively, with accuracy decreasing to 0.5608 and weighted ROC-AUC to 0.6666. This demonstrates that hyperparameter optimization does not necessarily improve every model.
-
-The classification analysis also showed that the models identified the Medium-risk category more successfully than the Low-risk category. Therefore, overall accuracy alone does not fully describe their classification performance.
-
-Among the evaluated classifiers, the **optimized Random Forest achieved the strongest overall balance of classification metrics**. Nevertheless, its accuracy of 58.99% indicates that the three tax-risk categories cannot be predicted reliably using the available features alone.
-
-### 4. Clustering Findings
-
-The clustering analysis was conducted to investigate whether firms could be grouped according to their financial and governance characteristics. Because extreme observations affected distance-based clustering, Isolation Forest was applied within the clustering workflow. It identified 127 potential outlier observations, leaving **12,526 observations** for the subsequent clustering analysis.
-
-The K-Means results indicated a dominant group of firms with relatively similar characteristics, alongside smaller groups with more distinctive profiles. This suggests that the dataset does not contain extremely strong natural segmentation across all firms.
-
-A four-cluster solution was also examined using the Gaussian Mixture Model (GMM). The resulting cluster profiles revealed differences in firm size, foreign ownership, leverage, cash holdings, liquidity, growth, and asset structure. The largest and more resource-intensive group was characterized by higher firm size, foreign ownership, leverage, cash holdings, and asset tangibility. Other groups represented different combinations of firm size, governance characteristics, liquidity, and growth.
-
-These findings indicate that clustering can provide a complementary perspective on firm heterogeneity. However, the clusters should be interpreted as statistical groupings based on the selected features rather than as definitive economic or tax-risk categories.
-
-### 5. SHAP Explainability Findings
-
-SHAP analysis was applied to the optimized LightGBM regression model to identify the variables contributing most strongly to its predictions of future CETR. The global feature-importance results showed that historical tax-related indicators were among the most influential explanatory variables.
-
-The highest mean absolute SHAP values were observed for:
-
-| Feature | Mean absolute SHAP value |
+| Feature | Mean Absolute SHAP |
 |---|---:|
 | A_GETR | 0.031094 |
 | GETR5 | 0.024150 |
 | PTI | 0.010275 |
 | CETR5 | 0.009807 |
 | TSDA | 0.008222 |
-| ROE | 0.006354 |
-| GRW | 0.004650 |
-| lag1_ni | 0.004524 |
-| A_CETR | 0.004159 |
-| PPE | 0.003830 |
 
-A_GETR was the most influential feature, followed by GETR5. The importance of these variables suggests that historical tax-related information contains useful predictive signals for future CETR. The SHAP dependence analysis also indicated a nonlinear relationship between A_GETR and the model output, providing additional support for using a nonlinear model in this forecasting task.
+A_GETR was the most influential feature, followed by GETR5. These results highlight the predictive value of historical tax information but do not establish causal relationships.
 
-These SHAP values measure the magnitude of each variable's contribution to model predictions. They do not establish causal relationships, nor do they independently demonstrate whether a variable increases or decreases predicted CETR. The direction of the relationship must be interpreted using the corresponding SHAP dependence or summary plots.
+## 6. Overall Interpretation
 
-### 6. Overall Interpretation
+The results show that optimized LightGBM performed best for predicting future CETR, while optimized Random Forest achieved the strongest classification results. Clustering revealed differences in firms' financial characteristics, and SHAP highlighted the importance of historical tax indicators.
 
-Taken together, the findings demonstrate that corporate tax avoidance can be examined from complementary predictive and exploratory perspectives. The regression results identify optimized LightGBM as the strongest reported model for one-year-ahead CETR prediction, while the optimized Random Forest provides the strongest overall classification performance among the evaluated classifiers. The clustering analysis reveals meaningful differences in firms' financial profiles, and SHAP analysis highlights the predictive importance of historical tax-related variables.
-
-The findings also reveal important limitations. The final regression \(R^2\) of 0.1051 and classification accuracy of 0.5899 indicate moderate predictive capability rather than highly accurate forecasting. Furthermore, the negative \(R^2\) of the linear baseline and Residual MLP shows that greater model complexity does not automatically guarantee better predictive performance.
-
-The chronological evaluation design provides a more realistic assessment of forecasting performance than a random split when the objective is to predict future observations. Nevertheless, the results should be interpreted within the scope of the available dataset, features, and evaluation period. In addition, SHAP results describe model behaviour rather than causal effects.
-
-Overall, this study demonstrates the value of integrating regression, classification, clustering, and explainability into a single machine learning framework for analysing corporate tax avoidance. The results particularly highlight the importance of historical tax measures while showing that additional financial, governance, institutional, and macroeconomic information may be needed to improve future predictions.
-
+However, the regression R² of 0.1051 and classification accuracy of 58.99% indicate limited predictive capability. The findings support combining regression, classification, clustering, and explainability, while further financial and governance variables may be needed to improve future predictions.
 
 ## Research Contributions
 
